@@ -1,0 +1,23 @@
+body {
+  font-family: sans-serif;
+  padding: 20px;
+  background-color: #f9f9f9;
+}
+
+h1, h2 {
+  color: #333;
+}
+
+.bar {
+  fill: steelblue;
+}
+
+.bar.weekend {
+  fill: tomato;
+}
+
+.line {
+  fill: none;
+  stroke: green;
+  stroke-width: 2px;
+}

@@ -1,60 +1,200 @@
-body {
-  font-family: sans-serif;
-  padding: 20px;
-  background-color: #f9f9f9;
-  text-align: center;
-  position: relative;
-  z-index: 0;
-}
+* {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background-color: #f9f9f9;
+      text-align: center;
+      position: relative;
+      z-index: 0;
+      margin: 0;
+      min-height: 100vh;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      top: 0;
+      width: 300px;
+      height: 100%;
+      background-color: #d0f0fd;
+      z-index: -1;
+    }
+
+    body::before {
+      left: 0;
+    }
+
+    body::after {
+      right: 0;
+    }
+
+    h1, h2 {
+      color: #333;
+      margin: 20px 0;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+    }
+
+    .bar {
+      fill: steelblue;
+    }
+
+    .bar.weekend {
+      fill: tomato;
+    }
+
+    .line {
+      fill: none;
+      stroke: green;
+      stroke-width: 2px;
+    }
+
+    .chart-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 40px;
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .chart-container svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .title {
+      background-color: #d0f0fd;
+      max-width: 700px;
+      width: 90%;
+      border-radius: 25px;
+      margin: 20px auto;
+      padding: 15px;
+    }
+
+    #tooltip {
+      position: absolute;
+      opacity: 0;
+      background: white;
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      pointer-events: none;
+      font-size: 14px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    @media screen and (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+
+      body::before,
+      body::after {
+        display: none; 
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+      }
+
+      .title {
+        width: 95%;
+        border-radius: 15px;
+        padding: 12px;
+      }
+
+      .chart-container {
+        margin-bottom: 30px;
+      }
+
+      .chart-container svg {
+        width: 100%;
+        max-width: 600px;
+      }
+    }
+
+    @media screen and (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+
+      h1 {
+        font-size: 1.6rem;
+        line-height: 1.2;
+      }
+
+      h2 {
+        font-size: 1.3rem;
+        line-height: 1.2;
+      }
+
+      .title {
+        width: 98%;
+        border-radius: 10px;
+        padding: 10px;
+        margin: 15px auto;
+      }
+
+      .chart-container {
+        margin-bottom: 25px;
+      }
+
+      .chart-container svg {
+        width: 100%;
+        max-width: 100%;
+        height: 300px; 
+      }
+
+      #tooltip {
+        font-size: 12px;
+        padding: 4px 8px;
+      }
+    }
 
 
-body::before,
-body::after {
-  content: "";
-  position: fixed;
-  top: 0;
-  width: 300px;
-  height: 100%;
-  background-color: #d0f0fd;
-  z-index: -1;
-}
+    @media screen and (max-width: 320px) {
+      body {
+        padding: 8px;
+      }
 
-body::before {
-  left: 0;
-}
+      h1 {
+        font-size: 1.4rem;
+      }
 
-body::after {
-  right: 0;
-}
+      h2 {
+        font-size: 1.2rem;
+      }
 
+      .title {
+        border-radius: 8px;
+        padding: 8px;
+      }
 
-h1, h2 {
-  color: #333;
-}
+      .chart-container svg {
+        height: 250px;
+      }
+    }
 
-.bar {
-  fill: steelblue;
-}
+    @media screen and (min-width: 1200px) {
+      .title {
+        max-width: 800px;
+      }
 
-.bar.weekend {
-  fill: tomato;
-}
-
-.line {
-  fill: none;
-  stroke: green;
-  stroke-width: 2px;
-}
-
-.chart-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 40px;
-}
-
-.title {
-  background-color: #d0f0fd;
-  width: 700px;
-  border-radius: 25px;
-  margin-left: 385px;
-}
+      .chart-container svg {
+        max-width: 800px;
+      }
+    }

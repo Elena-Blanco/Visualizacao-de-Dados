@@ -30,7 +30,6 @@ async function main() {
 
   const unionQuery = fileNames.map(fn => `SELECT * FROM read_parquet('${fn}')`).join(' UNION ALL ');
 
-  // Consulta 1
   const resultA = await conn.query(`
   SELECT 
     strftime(lpep_pickup_datetime, '%w') AS dow,
@@ -43,12 +42,11 @@ async function main() {
 
   const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
   const dayData = resultA.toArray().map(row => ({
-  day: days[parseInt(row.dow, 10)],
-  value: Number(row.count) // ← conversão aqui
-}));
+    day: days[parseInt(row.dow, 10)],
+    value: Number(row.count)
+  }));
 
 
-  // Consulta 2
   const resultB = await conn.query(`
   SELECT 
     CAST(strftime(lpep_pickup_datetime, '%H') AS INT) AS hour,
@@ -61,7 +59,7 @@ async function main() {
 
   const tipData = resultB;
 
-  // Gráfico A - Barras
+  // Pergunta 1
   svgA.selectAll("*").remove();
   const margin = { top: 20, right: 30, bottom: 50, left: 60 };
   const width = +svgA.attr("width") - margin.left - margin.right;
@@ -81,6 +79,8 @@ async function main() {
   gA.append("g").call(d3.axisLeft(yA));
   gA.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(xA));
 
+  const tooltip = d3.select("#tooltip");
+    
   gA.selectAll(".bar")
     .data(dayData)
     .enter()
@@ -90,9 +90,30 @@ async function main() {
     .attr("y", d => yA(d.value))
     .attr("width", xA.bandwidth())
     .attr("height", d => height - yA(d.value))
-    .attr("fill", d => (d.day === 'Sábado' || d.day === 'Domingo') ? 'tomato' : 'steelblue');
+    .attr("fill", d => (d.day === 'Sábado' || d.day === 'Domingo') ? 'tomato' : 'steelblue')
+    .on("mouseover", function (event, d) {
+      tooltip
+        .style("opacity", 1)
+        .html(`Dia: ${d.day}<br>Corridas: ${d.value.toLocaleString()}`)
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 28) + "px");
 
-  // Gráfico B - Linha
+      d3.select(this).attr("fill", "orange");
+    })
+    .on("mousemove", function (event) {
+      tooltip
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 28) + "px");
+    })
+    .on("mouseout", function (event, d) {
+      tooltip.style("opacity", 0);
+      d3.select(this).attr("fill", d =>
+        (d.day === 'Sábado' || d.day === 'Domingo') ? 'tomato' : 'steelblue'
+      );
+    });
+
+
+  // Pergunta 2
   svgB.selectAll("*").remove();
   const gB = svgB.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -121,6 +142,59 @@ async function main() {
     .attr("stroke", "steelblue")
     .attr("stroke-width", 2)
     .attr("d", line);
+
+  gB.selectAll(".point")
+    .data(tipData)
+    .enter()
+    .append("circle")
+    .attr("class", "point")
+    .attr("cx", d => xB(d.hour))
+    .attr("cy", d => yB(d.tip))
+    .attr("r", 4)
+    .attr("fill", "steelblue")
+    .on("mouseover", function (event, d) {
+      tooltip
+        .style("opacity", 1)
+        .html(`Hora: ${d.hour}h<br>Gorjeta média: $${d.tip.toFixed(2)}`)
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 28) + "px");
+
+      d3.select(this).attr("fill", "orange").attr("r", 6);
+    })
+    .on("mousemove", function (event) {
+      tooltip
+        .style("left", (event.pageX + 10) + "px")
+        .style("top", (event.pageY - 28) + "px");
+    })
+    .on("mouseout", function () {
+      tooltip.style("opacity", 0);
+      d3.select(this).attr("fill", "steelblue").attr("r", 4);
+    });
+
+
+  // Grid horizontal (linhas ao longo do eixo Y)
+  //   gB.append("g")
+  //     .attr("class", "grid-y")
+  //     .call(d3.axisLeft(yB)
+  //       .tickSize(-width)
+  //       .tickFormat("")
+  //     )
+  //     .selectAll("line")
+  //     .attr("stroke", "#ccc")
+  //     .attr("stroke-dasharray", "3,3");
+
+  //   // Grid vertical (linhas ao longo do eixo X)
+  //   gB.append("g")
+  //     .attr("class", "grid-x")
+  //     .attr("transform", `translate(0,${height})`)
+  //     .call(d3.axisBottom(xB)
+  //       .tickSize(-height)
+  //       .tickFormat("")
+  //       .ticks(24)
+  //     )
+  //     .selectAll("line")
+  //     .attr("stroke", "#ccc")
+  //     .attr("stroke-dasharray", "3,3");
 }
 
 main();

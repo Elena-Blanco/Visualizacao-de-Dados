@@ -2,7 +2,31 @@ body {
   font-family: sans-serif;
   padding: 20px;
   background-color: #f9f9f9;
+  text-align: center;
+  position: relative;
+  z-index: 0;
 }
+
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  width: 300px;
+  height: 100%;
+  background-color: #d0f0fd;
+  z-index: -1;
+}
+
+body::before {
+  left: 0;
+}
+
+body::after {
+  right: 0;
+}
+
 
 h1, h2 {
   color: #333;
@@ -20,4 +44,17 @@ h1, h2 {
   fill: none;
   stroke: green;
   stroke-width: 2px;
+}
+
+.chart-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.title {
+  background-color: #d0f0fd;
+  width: 700px;
+  border-radius: 25px;
+  margin-left: 385px;
 }

@@ -54,7 +54,7 @@ async function main() {
     CAST(strftime(lpep_pickup_datetime, '%H') AS INT) AS hour,
     AVG(tip_amount) AS tip
   FROM (${unionQuery})
-  WHERE tip_amount > 0 AND lpep_pickup_datetime IS NOT NULL
+  WHERE tip_amount >= 0 AND lpep_pickup_datetime IS NOT NULL
   GROUP BY hour
   ORDER BY hour
   `);

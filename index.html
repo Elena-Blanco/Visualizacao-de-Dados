@@ -1,20 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>Green Taxi Analysis</title>
   <link rel="stylesheet" href="/style.css">
 </head>
+
 <body>
-  <h1>Análise dos Green Taxis NYC</h1>
-  <h2>Quantidade de Corridas por Dia da Semana</h2>
-  <svg id="chartA" width="700" height="400"></svg>
+  <div class="title">
+    <h1>🚕 Análise dos Green Taxis NYC</h1>
+  </div>
 
-  <h2>Gorjeta Média por Hora</h2>
-  <svg id="chartB" width="700" height="400"></svg>
+  <div class="title">
+    <h2>📊 Quantidade de Corridas por Dia da Semana</h2>
+  </div>
 
-  <div id="tooltip" style="position: absolute; opacity: 0; background: white; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; pointer-events: none; font-size: 14px;"></div>
+  <div class="chart-container">
+    <svg id="chartA" width="700" height="400"></svg>
+  </div>
+
+  <div class="title">
+    <h2>💰 Gorjeta Média por Hora</h2>
+  </div>
+  <div class="chart-container">
+    <svg id="chartB" width="700" height="400"></svg>
+  </div>
+
+  <div id="tooltip"
+    style="position: absolute; opacity: 0; background: white; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; pointer-events: none; font-size: 14px;">
+  </div>
 
   <script type="module" src="/src/main.js"></script>
 </body>
+
 </html>

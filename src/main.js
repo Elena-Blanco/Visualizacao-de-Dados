@@ -30,7 +30,6 @@ async function main() {
 
   const unionQuery = fileNames.map(fn => `SELECT * FROM read_parquet('${fn}')`).join(' UNION ALL ');
 
-  // Consulta 1
   const resultA = await conn.query(`
   SELECT 
     strftime(lpep_pickup_datetime, '%w') AS dow,
@@ -44,11 +43,10 @@ async function main() {
   const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
   const dayData = resultA.toArray().map(row => ({
     day: days[parseInt(row.dow, 10)],
-    value: Number(row.count) // ← conversão aqui
+    value: Number(row.count)
   }));
 
 
-  // Consulta 2
   const resultB = await conn.query(`
   SELECT 
     CAST(strftime(lpep_pickup_datetime, '%H') AS INT) AS hour,
@@ -61,7 +59,7 @@ async function main() {
 
   const tipData = resultB;
 
-  // Gráfico A - Barras
+  // Pergunta 1
   svgA.selectAll("*").remove();
   const margin = { top: 20, right: 30, bottom: 50, left: 60 };
   const width = +svgA.attr("width") - margin.left - margin.right;
@@ -80,17 +78,6 @@ async function main() {
 
   gA.append("g").call(d3.axisLeft(yA));
   gA.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(xA));
-
-  // gA.selectAll(".bar")
-  //   .data(dayData)
-  //   .enter()
-  //   .append("rect")
-  //   .attr("class", d => (d.day === 'Sábado' || d.day === 'Domingo') ? "bar weekend" : "bar")
-  //   .attr("x", d => xA(d.day))
-  //   .attr("y", d => yA(d.value))
-  //   .attr("width", xA.bandwidth())
-  //   .attr("height", d => height - yA(d.value))
-  //   .attr("fill", d => (d.day === 'Sábado' || d.day === 'Domingo') ? 'tomato' : 'steelblue');
 
   const tooltip = d3.select("#tooltip");
     
@@ -126,7 +113,7 @@ async function main() {
     });
 
 
-  // Gráfico B - Linha
+  // Pergunta 2
   svgB.selectAll("*").remove();
   const gB = svgB.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 

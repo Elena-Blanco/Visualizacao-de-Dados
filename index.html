@@ -1,38 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Green Taxi Analysis</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
 </head>
 
 <body>
-  <div class="title">
-    <h1>Análise dos Green Taxis NYC</h1>
+  <div class="container">
+    <header class="header">
+      <h1 class="main-title">Análise dos Green Taxis NYC</h1>
+      <p class="subtitle">Análise quantitativa de padrões de corridas e gorjetas</p>
+    </header>
+
+    <div class="divider"></div>
+
+    <section class="chart-section">
+      <div class="section-header">
+        <h2 class="section-title">Distribuição por Dia da Semana</h2>
+        <p class="section-description">Volume de corridas ao longo da semana</p>
+      </div>
+      <div class="chart-container">
+        <div class="chart-wrapper">
+          <svg id="chartA" width="700" height="400"></svg>
+        </div>
+      </div>
+    </section>
+
+    <section class="chart-section">
+      <div class="section-header">
+        <h2 class="section-title">Gorjetas por Período</h2>
+        <p class="section-description">Variação das gorjetas ao longo do dia</p>
+      </div>
+      <div class="chart-container">
+        <div class="chart-wrapper">
+          <svg id="chartB" width="700" height="400"></svg>
+        </div>
+      </div>
+    </section>
   </div>
 
-  <div class="title">
-    <h2>Quantidade de Corridas por Dia da Semana</h2>
-  </div>
+  <div id="tooltip"></div>
 
-  <div class="chart-container">
-    <svg id="chartA" width="700" height="400"></svg>
-  </div>
-
-  <div class="title">
-    <h2>Gorjeta Média por Hora</h2>
-  </div>
-  <div class="chart-container">
-    <svg id="chartB" width="700" height="400"></svg>
-  </div>
-
-  <div id="tooltip"
-    style="position: absolute; opacity: 0; background: white; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; pointer-events: none; font-size: 14px;">
-  </div>
 
   <script type="module" src="/src/main.js"></script>
+  </script>
 </body>
 
 </html>
+

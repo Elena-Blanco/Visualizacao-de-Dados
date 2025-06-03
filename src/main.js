@@ -4,11 +4,21 @@ import * as d3 from 'd3';
 const svgA = d3.select("#chartA");
 const svgB = d3.select("#chartB");
 
+
+const defaultBarColor = 'steelblue';
+const weekendColor = 'tomato';
+const highlightColor = 'orange';
+const lineColor = 'steelblue';
+const pointColor = 'steelblue';
+const gridColor = '#e0e0e0';
+const textColor = '#333';
+const axisColor = '#555';
+
 async function main() {
   const db = await loadDb();
   const conn = await db.connect();
 
-  const basePath = '/green/';
+  const basePath = '/green/'; 
   const fileNames = [
     "green_tripdata_2023-01.parquet",
     "green_tripdata_2023-02.parquet",
@@ -19,25 +29,30 @@ async function main() {
   ];
 
   for (const fileName of fileNames) {
-    const response = await fetch(basePath + fileName);
-    if (!response.ok) {
-      console.error(`Erro ao buscar arquivo: ${fileName}`, response.statusText);
+    try {
+      const response = await fetch(basePath + fileName);
+      if (!response.ok) {
+        console.error(`Erro ao buscar arquivo: ${fileName}`, response.statusText);
+        continue;
+      }
+      const buffer = await response.arrayBuffer();
+      await db.registerFileBuffer(fileName, new Uint8Array(buffer));
+    } catch (error) {
+      console.error(`Falha ao processar o arquivo ${fileName}:`, error);
       continue;
     }
-    const buffer = await response.arrayBuffer();
-    await db.registerFileBuffer(fileName, new Uint8Array(buffer));
   }
 
   const unionQuery = fileNames.map(fn => `SELECT * FROM read_parquet('${fn}')`).join(' UNION ALL ');
 
   const resultA = await conn.query(`
-  SELECT 
-    strftime(lpep_pickup_datetime, '%w') AS dow,
-    COUNT(*) AS count
-  FROM (${unionQuery})
-  WHERE lpep_pickup_datetime IS NOT NULL
-  GROUP BY dow
-  ORDER BY dow
+    SELECT
+      strftime(lpep_pickup_datetime, '%w') AS dow,
+      COUNT(*) AS count
+    FROM (${unionQuery})
+    WHERE lpep_pickup_datetime IS NOT NULL
+    GROUP BY dow
+    ORDER BY dow
   `);
 
   const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
@@ -46,41 +61,103 @@ async function main() {
     value: Number(row.count)
   }));
 
-
   const resultB = await conn.query(`
-  SELECT 
-    CAST(strftime(lpep_pickup_datetime, '%H') AS INT) AS hour,
-    AVG(tip_amount) AS tip
-  FROM (${unionQuery})
-  WHERE tip_amount >= 0 AND lpep_pickup_datetime IS NOT NULL
-  GROUP BY hour
-  ORDER BY hour
+    SELECT
+      CAST(strftime(lpep_pickup_datetime, '%H') AS INT) AS hour,
+      AVG(tip_amount) AS tip
+    FROM (${unionQuery})
+    WHERE tip_amount >= 0 AND lpep_pickup_datetime IS NOT NULL
+    GROUP BY hour
+    ORDER BY hour
   `);
 
-  const tipData = resultB;
+  const tipData = resultB.toArray().map(row => ({
+    hour: Number(row.hour),
+    tip: Number(row.tip)
+  }));
 
-  // Pergunta 1
+ 
+  const tooltip = d3.select("#tooltip");
+  if (tooltip.empty()) {
+    console.warn("Elemento #tooltip não encontrado. Crie um <div id='tooltip'></div> no seu HTML.");
+  } else {
+    
+    tooltip.style("position", "absolute")
+           .style("opacity", 0)
+           .style("background-color", "white")
+           .style("border", "1px solid #ccc")
+           .style("border-radius", "4px")
+           .style("padding", "8px")
+           .style("font-size", "12px")
+           .style("box-shadow", "0 2px 4px rgba(0,0,0,0.1)")
+           .style("pointer-events", "none"); 
+  }
+
+
+  // Gráfico A: Volume de corridas ao longo da semana
   svgA.selectAll("*").remove();
-  const margin = { top: 20, right: 30, bottom: 50, left: 60 };
-  const width = +svgA.attr("width") - margin.left - margin.right;
-  const height = +svgA.attr("height") - margin.top - margin.bottom;
-  const gA = svgA.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+  const marginA = { top: 50, right: 30, bottom: 70, left: 80 }; 
+  const widthA = +svgA.attr("width") - marginA.left - marginA.right;
+  const heightA = +svgA.attr("height") - marginA.top - marginA.bottom;
+  const gA = svgA.append("g").attr("transform", `translate(${marginA.left},${marginA.top})`);
 
   const xA = d3.scaleBand()
     .domain(dayData.map(d => d.day))
-    .range([0, width])
+    .range([0, widthA])
     .padding(0.2);
 
   const yA = d3.scaleLinear()
     .domain([0, d3.max(dayData, d => d.value)])
     .nice()
-    .range([height, 0]);
+    .range([heightA, 0]);
 
-  gA.append("g").call(d3.axisLeft(yA));
-  gA.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(xA));
+  // Eixo Y
+  gA.append("g")
+    .call(d3.axisLeft(yA).tickFormat(d3.format(",.0f"))) 
+    .selectAll("text")
+    .style("fill", axisColor);
 
-  const tooltip = d3.select("#tooltip");
-    
+  // Eixo X
+  gA.append("g")
+    .attr("transform", `translate(0,${heightA})`)
+    .call(d3.axisBottom(xA))
+    .selectAll("text")
+    .style("fill", axisColor)
+    .attr("transform", "rotate(-30)") 
+    .style("text-anchor", "end");
+
+
+  // Título do Gráfico A
+  gA.append("text")
+    .attr("x", widthA / 2)
+    .attr("y", 0 - (marginA.top / 2) - 5)
+    .attr("text-anchor", "middle")
+    .style("font-size", "16px")
+    .style("font-weight", "bold")
+    .style("fill", textColor)
+    .text("Volume de Corridas Durante a Semana");
+
+  // Rótulo Eixo Y - Gráfico A
+  gA.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 0 - marginA.left + 15)
+    .attr("x", 0 - (heightA / 2))
+    .attr("dy", "1em")
+    .style("text-anchor", "middle")
+    .style("font-size", "12px")
+    .style("fill", textColor)
+    .text("Número de Corridas");
+
+  // Rótulo Eixo X - Gráfico A
+  gA.append("text")
+    .attr("x", widthA / 2)
+    .attr("y", heightA + marginA.bottom - 15)
+    .attr("text-anchor", "middle")
+    .style("font-size", "12px")
+    .style("fill", textColor)
+    .text("Dia da Semana");
+
+  // Barras
   gA.selectAll(".bar")
     .data(dayData)
     .enter()
@@ -89,16 +166,19 @@ async function main() {
     .attr("x", d => xA(d.day))
     .attr("y", d => yA(d.value))
     .attr("width", xA.bandwidth())
-    .attr("height", d => height - yA(d.value))
-    .attr("fill", d => (d.day === 'Sábado' || d.day === 'Domingo') ? 'tomato' : 'steelblue')
+    .attr("height", d => heightA - yA(d.value))
+    .attr("fill", d => (d.day === 'Sábado' || d.day === 'Domingo') ? weekendColor : defaultBarColor)
     .on("mouseover", function (event, d) {
       tooltip
         .style("opacity", 1)
-        .html(`Dia: ${d.day}<br>Corridas: ${d.value.toLocaleString()}`)
+        .html(`<b>${d.day}</b><br>Corridas: ${d.value.toLocaleString()}`)
         .style("left", (event.pageX + 10) + "px")
         .style("top", (event.pageY - 28) + "px");
 
-      d3.select(this).attr("fill", "orange");
+      d3.select(this)
+        .transition()
+        .duration(200)
+        .attr("fill", highlightColor);
     })
     .on("mousemove", function (event) {
       tooltip
@@ -107,42 +187,113 @@ async function main() {
     })
     .on("mouseout", function (event, d) {
       tooltip.style("opacity", 0);
-      d3.select(this).attr("fill", d =>
-        (d.day === 'Sábado' || d.day === 'Domingo') ? 'tomato' : 'steelblue'
-      );
+      d3.select(this)
+        .transition()
+        .duration(200)
+        .attr("fill", (d.day === 'Sábado' || d.day === 'Domingo') ? weekendColor : defaultBarColor);
     });
 
 
-  // Pergunta 2
+  // Gráfico B: Variação das gorjetas ao longo do dia
   svgB.selectAll("*").remove();
-  const gB = svgB.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+  const marginB = { top: 50, right: 30, bottom: 70, left: 80 }; // Margens ajustadas
+  const widthB = +svgB.attr("width") - marginB.left - marginB.right;
+  const heightB = +svgB.attr("height") - marginB.top - marginB.bottom;
+  const gB = svgB.append("g").attr("transform", `translate(${marginB.left},${marginB.top})`);
 
   const xB = d3.scaleLinear()
-    .domain([0, 23])
-    .range([0, width]);
+    .domain([0, 23]) 
+    .range([0, widthB]);
 
   const yB = d3.scaleLinear()
     .domain([0, d3.max(tipData, d => d.tip)])
     .nice()
-    .range([height, 0]);
+    .range([heightB, 0]);
 
-  gB.append("g").call(d3.axisLeft(yB));
+  // Gridlines Horizontais (Eixo Y) - desenhar antes da linha e dos pontos
   gB.append("g")
-    .attr("transform", `translate(0,${height})`)
-    .call(d3.axisBottom(xB).ticks(24).tickFormat(d => `${d}h`));
+    .attr("class", "grid grid-y")
+    .call(d3.axisLeft(yB)
+      .tickSize(-widthB)
+      .tickFormat("")
+    )
+    .selectAll("line")
+    .attr("stroke", gridColor)
+    .attr("stroke-dasharray", "2,2");
 
+  // Gridlines Verticais (Eixo X) - desenhar antes da linha e dos pontos
+  gB.append("g")
+    .attr("class", "grid grid-x")
+    .attr("transform", `translate(0,${heightB})`)
+    .call(d3.axisBottom(xB)
+      .ticks(24) // Um tick por hora
+      .tickSize(-heightB)
+      .tickFormat("")
+    )
+    .selectAll("line")
+    .attr("stroke", gridColor)
+    .attr("stroke-dasharray", "2,2");
+
+  // Eixo Y
+  gB.append("g")
+    .call(d3.axisLeft(yB).tickFormat(d => `$${d.toFixed(2)}`)) 
+    .selectAll("text")
+    .style("fill", axisColor);
+
+  // Eixo X
+  gB.append("g")
+    .attr("transform", `translate(0,${heightB})`)
+    .call(d3.axisBottom(xB).ticks(12).tickFormat(d => `${d}h`)) 
+    .selectAll("text")
+    .style("fill", axisColor);
+
+
+  // Título do Gráfico B
+  gB.append("text")
+    .attr("x", widthB / 2)
+    .attr("y", 0 - (marginB.top / 2) - 5)
+    .attr("text-anchor", "middle")
+    .style("font-size", "16px")
+    .style("font-weight", "bold")
+    .style("fill", textColor)
+    .text("Variação da Gorjeta Média ao Longo do Dia");
+
+  // Rótulo Eixo Y - Gráfico B
+  gB.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 0 - marginB.left + 15)
+    .attr("x", 0 - (heightB / 2))
+    .attr("dy", "1em")
+    .style("text-anchor", "middle")
+    .style("font-size", "12px")
+    .style("fill", textColor)
+    .text("Gorjeta Média ($)");
+
+  // Rótulo Eixo X - Gráfico B
+  gB.append("text")
+    .attr("x", widthB / 2)
+    .attr("y", heightB + marginB.bottom - 25) 
+    .attr("text-anchor", "middle")
+    .style("font-size", "12px")
+    .style("fill", textColor)
+    .text("Hora do Dia");
+
+
+  // Linha
   const line = d3.line()
     .x(d => xB(d.hour))
-    .y(d => yB(d.tip));
+    .y(d => yB(d.tip))
+    .curve(d3.curveMonotoneX); 
 
   gB.append("path")
     .datum(tipData)
     .attr("class", "line")
     .attr("fill", "none")
-    .attr("stroke", "steelblue")
-    .attr("stroke-width", 2)
+    .attr("stroke", lineColor)
+    .attr("stroke-width", 2.5) 
     .attr("d", line);
 
+  // Pontos na linha
   gB.selectAll(".point")
     .data(tipData)
     .enter()
@@ -151,15 +302,21 @@ async function main() {
     .attr("cx", d => xB(d.hour))
     .attr("cy", d => yB(d.tip))
     .attr("r", 4)
-    .attr("fill", "steelblue")
+    .attr("fill", pointColor)
+    .attr("stroke", "white") 
+    .attr("stroke-width", 1)
     .on("mouseover", function (event, d) {
       tooltip
         .style("opacity", 1)
-        .html(`Hora: ${d.hour}h<br>Gorjeta média: $${d.tip.toFixed(2)}`)
+        .html(`<b>${d.hour}:00</b><br>Gorjeta média: $${d.tip.toFixed(2)}`)
         .style("left", (event.pageX + 10) + "px")
         .style("top", (event.pageY - 28) + "px");
 
-      d3.select(this).attr("fill", "orange").attr("r", 6);
+      d3.select(this)
+        .transition()
+        .duration(150)
+        .attr("fill", highlightColor)
+        .attr("r", 6);
     })
     .on("mousemove", function (event) {
       tooltip
@@ -168,33 +325,22 @@ async function main() {
     })
     .on("mouseout", function () {
       tooltip.style("opacity", 0);
-      d3.select(this).attr("fill", "steelblue").attr("r", 4);
+      d3.select(this)
+        .transition()
+        .duration(150)
+        .attr("fill", pointColor)
+        .attr("r", 4);
     });
 
-
-  // Grid horizontal (linhas ao longo do eixo Y)
-  //   gB.append("g")
-  //     .attr("class", "grid-y")
-  //     .call(d3.axisLeft(yB)
-  //       .tickSize(-width)
-  //       .tickFormat("")
-  //     )
-  //     .selectAll("line")
-  //     .attr("stroke", "#ccc")
-  //     .attr("stroke-dasharray", "3,3");
-
-  //   // Grid vertical (linhas ao longo do eixo X)
-  //   gB.append("g")
-  //     .attr("class", "grid-x")
-  //     .attr("transform", `translate(0,${height})`)
-  //     .call(d3.axisBottom(xB)
-  //       .tickSize(-height)
-  //       .tickFormat("")
-  //       .ticks(24)
-  //     )
-  //     .selectAll("line")
-  //     .attr("stroke", "#ccc")
-  //     .attr("stroke-dasharray", "3,3");
+  // Adicionar um eixo X superior para mostrar todas as horas (opcional, pode poluir)
+  /*
+  gB.append("g")
+    .attr("class", "axis-x-top")
+    .call(d3.axisTop(xB).ticks(24).tickFormat(d => `${d}`))
+    .selectAll("text")
+    .style("font-size", "8px")
+    .style("fill", "#aaa");
+  */
 }
 
-main();
+main().catch(error => console.error("Erro na função main:", error));

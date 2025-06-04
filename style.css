@@ -124,7 +124,6 @@
       height: auto;
     }
 
-    /* Estilos dos gráficos mantidos */
     .bar {
       fill: var(--accent);
       transition: fill 0.2s ease;
@@ -215,7 +214,6 @@
       margin: 3rem 0;
     }
 
-    /* Responsive Design */
     @media (max-width: 768px) {
       .container {
         padding: 2rem 1rem;

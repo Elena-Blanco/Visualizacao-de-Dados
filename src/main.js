@@ -93,8 +93,6 @@ async function main() {
            .style("pointer-events", "none"); 
   }
 
-
-  // Gráfico A: Volume de corridas ao longo da semana
   svgA.selectAll("*").remove();
   const marginA = { top: 50, right: 30, bottom: 70, left: 80 }; 
   const widthA = +svgA.attr("width") - marginA.left - marginA.right;
@@ -126,8 +124,6 @@ async function main() {
     .attr("transform", "rotate(-30)") 
     .style("text-anchor", "end");
 
-
-  // Título do Gráfico A
   gA.append("text")
     .attr("x", widthA / 2)
     .attr("y", 0 - (marginA.top / 2) - 5)
@@ -137,7 +133,6 @@ async function main() {
     .style("fill", textColor)
     .text("Volume de Corridas Durante a Semana");
 
-  // Rótulo Eixo Y - Gráfico A
   gA.append("text")
     .attr("transform", "rotate(-90)")
     .attr("y", 0 - marginA.left + 15)
@@ -148,7 +143,6 @@ async function main() {
     .style("fill", textColor)
     .text("Número de Corridas");
 
-  // Rótulo Eixo X - Gráfico A
   gA.append("text")
     .attr("x", widthA / 2)
     .attr("y", heightA + marginA.bottom - 15)
@@ -157,7 +151,6 @@ async function main() {
     .style("fill", textColor)
     .text("Dia da Semana");
 
-  // Barras
   gA.selectAll(".bar")
     .data(dayData)
     .enter()
@@ -193,10 +186,8 @@ async function main() {
         .attr("fill", (d.day === 'Sábado' || d.day === 'Domingo') ? weekendColor : defaultBarColor);
     });
 
-
-  // Gráfico B: Variação das gorjetas ao longo do dia
   svgB.selectAll("*").remove();
-  const marginB = { top: 50, right: 30, bottom: 70, left: 80 }; // Margens ajustadas
+  const marginB = { top: 50, right: 30, bottom: 70, left: 80 };
   const widthB = +svgB.attr("width") - marginB.left - marginB.right;
   const heightB = +svgB.attr("height") - marginB.top - marginB.bottom;
   const gB = svgB.append("g").attr("transform", `translate(${marginB.left},${marginB.top})`);
@@ -210,7 +201,6 @@ async function main() {
     .nice()
     .range([heightB, 0]);
 
-  // Gridlines Horizontais (Eixo Y) - desenhar antes da linha e dos pontos
   gB.append("g")
     .attr("class", "grid grid-y")
     .call(d3.axisLeft(yB)
@@ -221,12 +211,11 @@ async function main() {
     .attr("stroke", gridColor)
     .attr("stroke-dasharray", "2,2");
 
-  // Gridlines Verticais (Eixo X) - desenhar antes da linha e dos pontos
   gB.append("g")
     .attr("class", "grid grid-x")
     .attr("transform", `translate(0,${heightB})`)
     .call(d3.axisBottom(xB)
-      .ticks(24) // Um tick por hora
+      .ticks(24)
       .tickSize(-heightB)
       .tickFormat("")
     )
@@ -234,21 +223,17 @@ async function main() {
     .attr("stroke", gridColor)
     .attr("stroke-dasharray", "2,2");
 
-  // Eixo Y
   gB.append("g")
     .call(d3.axisLeft(yB).tickFormat(d => `$${d.toFixed(2)}`)) 
     .selectAll("text")
     .style("fill", axisColor);
 
-  // Eixo X
   gB.append("g")
     .attr("transform", `translate(0,${heightB})`)
     .call(d3.axisBottom(xB).ticks(12).tickFormat(d => `${d}h`)) 
     .selectAll("text")
     .style("fill", axisColor);
 
-
-  // Título do Gráfico B
   gB.append("text")
     .attr("x", widthB / 2)
     .attr("y", 0 - (marginB.top / 2) - 5)
@@ -258,7 +243,6 @@ async function main() {
     .style("fill", textColor)
     .text("Variação da Gorjeta Média ao Longo do Dia");
 
-  // Rótulo Eixo Y - Gráfico B
   gB.append("text")
     .attr("transform", "rotate(-90)")
     .attr("y", 0 - marginB.left + 15)
@@ -269,7 +253,6 @@ async function main() {
     .style("fill", textColor)
     .text("Gorjeta Média ($)");
 
-  // Rótulo Eixo X - Gráfico B
   gB.append("text")
     .attr("x", widthB / 2)
     .attr("y", heightB + marginB.bottom - 25) 
@@ -278,8 +261,6 @@ async function main() {
     .style("fill", textColor)
     .text("Hora do Dia");
 
-
-  // Linha
   const line = d3.line()
     .x(d => xB(d.hour))
     .y(d => yB(d.tip))
@@ -293,7 +274,6 @@ async function main() {
     .attr("stroke-width", 2.5) 
     .attr("d", line);
 
-  // Pontos na linha
   gB.selectAll(".point")
     .data(tipData)
     .enter()
@@ -331,16 +311,6 @@ async function main() {
         .attr("fill", pointColor)
         .attr("r", 4);
     });
-
-  // Adicionar um eixo X superior para mostrar todas as horas (opcional, pode poluir)
-  /*
-  gB.append("g")
-    .attr("class", "axis-x-top")
-    .call(d3.axisTop(xB).ticks(24).tickFormat(d => `${d}`))
-    .selectAll("text")
-    .style("font-size", "8px")
-    .style("fill", "#aaa");
-  */
 }
 
 main().catch(error => console.error("Erro na função main:", error));

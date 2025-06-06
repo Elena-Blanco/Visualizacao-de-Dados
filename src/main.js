@@ -197,7 +197,7 @@ async function main() {
     .range([0, widthB]);
 
   const yB = d3.scaleLinear()
-    .domain([0, d3.max(tipData, d => d.tip)])
+    .domain([1.8, d3.max(tipData, d => d.tip)])
     .nice()
     .range([heightB, 0]);
 
